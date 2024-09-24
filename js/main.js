@@ -7,7 +7,7 @@ let theQuestion = document.querySelector(".quiz-box .the-question");
 let theAnswers = document.querySelector(".quiz-box .the-answers");
 let theBtn = document.querySelector(".quiz-box .submit-btn");
 let theProgDots = document.querySelector(".footer .the-prog-dots");
-let theTimer = document.querySelector(".footer .timer");
+let theTimer = document.querySelector(".footer .timer span");
 let historyList = document.querySelector(".offcanvas-body .players")
 
 let theRightAnswers = 0;
@@ -15,26 +15,8 @@ let theWrongAnswers = 0;
 let theCurrentQuestion = 0;
 let numberOfQuestion = 10;
 
-// send e-mail
-document.getElementById("my-form").addEventListener("submit",function(event) {
-  event.preventDefault(); // منع السلوك الافتراضي للإرسال
-  sentEmail()
-// clone to next funtions
-  if (theInputFiled.value !== "") {
-    thePlayerName.innerHTML = theInputFiled.value
-    theInput.remove()
-
-
-  } else {
-    // if the input filed empty make it's color red
-    theInputFiled.classList.add("req")
-  }
-});
-
-makeHistory()
-
 questionsCount.innerHTML = numberOfQuestion;
-
+makeHistory()
 
 fetch("questions_islam.json") // URL of the API
   .then((response) => {
@@ -45,9 +27,25 @@ fetch("questions_islam.json") // URL of the API
   })
   .then((data) => {
 
-    // select random 10 questions
+    // start the game & send e-mail
+    document.getElementById("my-form").addEventListener("submit",function(event) {
+      event.preventDefault();
+      sentEmail()
+      if (theInputFiled.value !== "") {
+        thePlayerName.innerHTML = theInputFiled.value
+        theInput.remove()
+        makeTimer()
+      showQuestion();
 
-    // method 
+      changeTheStatus()
+      } else {
+        // if the input filed empty make it's color red
+        theInputFiled.classList.add("req")
+      }
+    });
+
+    // select random 10 questions
+    // method form article
     let emptyArr =  [...Array(data.questions.length).keys()]; // make arr of ""
     let randomArrForQuestion = emptyArr.sort(() => Math.random() - 0.5)  // make the values random
     randomArrForQuestion.length = numberOfQuestion; // select only the first 10 number
@@ -67,9 +65,6 @@ fetch("questions_islam.json") // URL of the API
     }
     let theDotsList = document.querySelectorAll(".the-prog-dots span")
 
-    showQuestion();
-
-    changeTheStatus()
 
     // add clicking functionality to Answers
     addEventListener("click", (a) => {
@@ -92,13 +87,16 @@ fetch("questions_islam.json") // URL of the API
         if (theAnswer === theSelectedAnswer.innerHTML) {
           theCurrentQuestion++
           theRightAnswers++
-          showQuestion()
+          theSelectedAnswer.classList.add("green")
         } else {
           theCurrentQuestion++
           theWrongAnswers++
-          showQuestion()
+          theSelectedAnswer.classList.add("red")
         }
-        changeTheStatus()
+        setTimeout(() => {
+          showQuestion()
+          changeTheStatus()
+        }, 1000);
       } else {
         // alert using bootstrap
         let theAnswersList = document.querySelectorAll(".the-answers .answer");
@@ -108,6 +106,9 @@ fetch("questions_islam.json") // URL of the API
       }
     });
 
+
+
+    
     // functions area
     function showQuestion() {
       if (theCurrentQuestion < numberOfQuestion) {
@@ -148,18 +149,28 @@ fetch("questions_islam.json") // URL of the API
       }
     }
     function changeTheStatus() {
-      if (theCurrentQuestion < numberOfQuestion) {
-        // change number inside counter
+      // change number inside counter
+      if (theCurrentQuestion > 0) {
         questionsCount.innerHTML = questionsCount.innerHTML - 1
-        
+      }
+
+      if (theCurrentQuestion < numberOfQuestion) {
         // change number of blue bots
         for (let i = 0; i <= theCurrentQuestion; i++) {
           theDotsList[i].classList.add("done")
         }
       }
+
+      // reset the timer in the footer
+      theTimer.innerHTML = 20
     }
+
     function endGame() {
       theBtn.classList.add("disable")
+      questionsCount.innerHTML = 0;
+      // stop timer
+      theTimer.remove()
+
       // add to locale storage 
       let playerName = thePlayerName.innerHTML
       console.log(theRightAnswers)
@@ -182,20 +193,16 @@ fetch("questions_islam.json") // URL of the API
       let resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
       resultModal.show();
 
-
       makeHistory()
-      makeReplayBtn()
     }
   })
   .catch((error) => {
     console.error("There was a problem with the fetch operation:", error);
   });
 
-
 // append the players data to side bar
 function makeHistory() {
   let playerData = JSON.parse(localStorage.getItem("players"))
-  // console.log(playerData)
   if (playerData) {
     let numberOfPlayer = playerData.players.length;
     for (let i = 0; i < numberOfPlayer; i++) {
@@ -212,6 +219,36 @@ function makeHistory() {
     }
   }
 }
+
+// make timer 
+function makeTimer() {
+    let gameTimer = setInterval(() => {
+    let red = document.querySelectorAll(".the-answers .answer")
+      red.forEach((e)=> e.classList.remove("red"))
+      theTimer.innerHTML = theTimer.innerHTML - 1;
+      // document.querySelectorAll(".the-answers .answer").forEach((e)=> e.classList.remove("red"))
+      // console.log(theTimer.innerHTML)
+      if (theTimer.innerHTML < 10 ) {
+        theTimer.parentElement.classList.add("red")
+      }
+      if (theTimer.innerHTML == 0) {
+        theCurrentQuestion++
+        theWrongAnswers++
+        red.forEach((e)=> e.classList.add("red"))
+
+        setTimeout(() => {
+          theTimer.parentElement.classList.add("red")
+          showQuestion()
+          changeTheStatus()
+        }, 1000);
+
+        if (theCurrentQuestion === 10) {
+          // when the test end stop to timer 
+          clearInterval(gameTimer);
+        }
+      }
+    }, 1000);
+  }
 
 // sent email function using Emailjs serves
 function sentEmail() {
