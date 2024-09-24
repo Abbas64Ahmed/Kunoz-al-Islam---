@@ -31,21 +31,6 @@ document.getElementById("my-form").addEventListener("submit",function(event) {
   }
 });
 
-// // set the name of the player
-// i commuted it because it make interfirns with submit event
-// startBtn.addEventListener("click", ()=> {
-//   if (theInputFiled.value !== "") {
-//     thePlayerName.innerHTML = theInputFiled.value
-//     theInput.remove()
-
-
-//   } else {
-//     // if the input filed empty make it's color red
-//     theInputFiled.classList.add("req")
-//   }
-// })
- 
-
 makeHistory()
 
 questionsCount.innerHTML = numberOfQuestion;
@@ -59,15 +44,21 @@ fetch("questions_islam.json") // URL of the API
     return response.json(); // Parse the JSON response
   })
   .then((data) => {
-    // console.log(data); // Handle the data from the API
-    // console.log(data.questions[0].question);  // test using obj
-    // console.log(data.questions.length);  // test using obj
 
     // select random 10 questions
-    let emptyArr = new Array(data.questions.length).fill(""); // make arr of ""
-    let randomArrForQuestion = emptyArr.map((e) => Math.floor(Math.random() * data.questions.length) ); // make the values random
+
+    // method 
+    let emptyArr =  [...Array(data.questions.length).keys()]; // make arr of ""
+    let randomArrForQuestion = emptyArr.sort(() => Math.random() - 0.5)  // make the values random
     randomArrForQuestion.length = numberOfQuestion; // select only the first 10 number
+
+
+    // my method 
+    // let emptyArr =  new Array(data.questions.length).fill(""); // make arr of ""
+    // let randomArrForQuestion = emptyArr.map((e) => Math.floor(Math.random() * data.questions.length) ); // make the values random
+    // randomArrForQuestion.length = numberOfQuestion; // select only the first 10 number
     // console.log(randomArrForQuestion)
+
 
     // make questions dots
     for (i = 0; i < randomArrForQuestion.length; i++) {
@@ -130,14 +121,12 @@ fetch("questions_islam.json") // URL of the API
 
         // make arr of random values to used it make answer random  
         let randomArrForAnswers = Array(numberOFAnswers).fill("")
-        randomArrForAnswers = randomArrForAnswers.map((e , i) =>  e = i)
-        // console.log(randomArrForAnswers)
+        randomArrForAnswers = randomArrForAnswers.map((e , i) => e = i )
         for (let i = randomArrForAnswers.length - 1; i >= 0; i--) {
           let theBox = randomArrForAnswers[i]
           let randomValue = Math.floor(Math.random() * i)
           randomArrForAnswers[i] = randomArrForAnswers[randomValue]
           randomArrForAnswers[randomValue] = theBox
-          // randomArrForAnswers[i]
         }
 
         // and the answers to the dom randomly
@@ -162,7 +151,7 @@ fetch("questions_islam.json") // URL of the API
       if (theCurrentQuestion < numberOfQuestion) {
         // change number inside counter
         questionsCount.innerHTML = questionsCount.innerHTML - 1
-        // console.log(theCurrentQuestion)
+        
         // change number of blue bots
         for (let i = 0; i <= theCurrentQuestion; i++) {
           theDotsList[i].classList.add("done")
@@ -195,7 +184,7 @@ fetch("questions_islam.json") // URL of the API
 
 
       makeHistory()
-      makeReplaybtn()
+      makeReplayBtn()
     }
   })
   .catch((error) => {
@@ -232,3 +221,8 @@ function sentEmail() {
   emailjs.send("service_3ne7ner", "template_b1cibkm", players)
   console.log("maasses")
 }
+
+// replay btn in the end of the game
+document.getElementById("replay-btn").addEventListener("click", ()=> {
+  location.reload();
+})
